@@ -1,6 +1,7 @@
 # General
-*.csv
 .DS_Store
+*.csv
+*.xlsx
 
 # Node
 node_modules

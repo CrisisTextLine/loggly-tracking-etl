@@ -3,20 +3,23 @@ var _ = require('lodash');
 
 var tempJsonDelimiter = '&&&&&&';
 var fileCount = 26;
+var pageTitlesToFix = [
+  'Chapter 1',
+  'Chapter 2',
+  'Chapter 3',
+  'Chapter 4',
+  'Chapter 5',
+  'Post-Convo Survey',
+  'Appendix',
+  'Our Philosophy',
+];
 
 function parseHeader(rawHeader) {
   return rawHeader.replace(/"| /g, '').split(',');
 } 
 
 function parseJsonRow(chunk, depthString) {
-  var string = chunk.replace(/"/g, '');
-  if (/[0-9]+:/.test(string)) {
-    var chapterString = string.match(/(Chapter [0-9]+)/)[0];
-    string = string.replace(/(?:[0-9]+):/, '-').replace('Chapter', chapterString);
-    if (!/:/.test(string)) return false;
-  }
-
-  var jsonChunks = string.split(':');
+  var jsonChunks = chunk.replace(/"/g, '').split(':');
   var length = jsonChunks.length;
   var maxId = length - 1;
   var key;
@@ -70,13 +73,15 @@ function parseRow(rawRow) {
         regularThings.push({});
       }
 
-      if (chunk.includes('Post-Convo Survey: Issue Tagging')) chunk = chunk.replace('Survey:', 'Survey -');
-      if (chunk.includes(':')) {
-        var parsed = parseJsonRow(chunk, depthString);
-        if (!parsed) continue;
-        depthString = parsed['depthString'];
-        jsonThings[parsed['key']] = parsed['value'];
+      for (var i in pageTitlesToFix) {
+        var title = pageTitlesToFix[i];
+        if (chunk.includes(title + ':')) chunk = chunk.replace(title + ':', title + ' - ');
       }
+      if (!chunk.includes(':')) continue;
+
+      var parsed = parseJsonRow(chunk, depthString);
+      depthString = parsed['depthString'];
+      jsonThings[parsed['key']] = parsed['value'];
     } else {
       regularThings.push(chunk.replace(/"|\\|'/g, '').replace(/\[/g, '[""').replace(/\]/g,'""]'));
     }
