@@ -15,7 +15,8 @@ function parseJsonRow(chunk, depthString) {
     string = string.replace(/(?:[0-9]+):/, '-').replace('Chapter', chapterString);
     if (!/:/.test(string)) return false;
   }
-  var jsonChunks = string.replace(/(?!Chapter)[0-9]:/g, '-').split(':');
+
+  var jsonChunks = string.split(':');
   var length = jsonChunks.length;
   var maxId = length - 1;
   var key;
@@ -69,10 +70,13 @@ function parseRow(rawRow) {
         regularThings.push({});
       }
 
-      var parsed = parseJsonRow(chunk, depthString);
-      if (!parsed) continue;
-      depthString = parsed['depthString'];
-      jsonThings[parsed['key']] = parsed['value'];
+      if (chunk.includes('Post-Convo Survey: Issue Tagging')) chunk = chunk.replace('Survey:', 'Survey -');
+      if (chunk.includes(':')) {
+        var parsed = parseJsonRow(chunk, depthString);
+        if (!parsed) continue;
+        depthString = parsed['depthString'];
+        jsonThings[parsed['key']] = parsed['value'];
+      }
     } else {
       regularThings.push(chunk.replace(/"|\\|'/g, '').replace(/\[/g, '[""').replace(/\]/g,'""]'));
     }
